@@ -2,7 +2,7 @@
 set -e
 
 if [[ -f $1/.dartnginx ]]; then
-  echo "Nginx with dart app"
+  echo "Nginx with dart"
   exit 0
 else
   exit 1
