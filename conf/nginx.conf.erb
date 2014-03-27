@@ -24,6 +24,13 @@ http {
   server {
     listen <%= ENV['PORT'] %>;
     server_name  _;
+
+    location ~* \.(css|js|dart|gif|jpe?g|png)$ {
+      expires max;
+      add_header Pragma public;
+      add_header Cache-Control "public, must-revalidate, proxy-revalidate";
+    }
+
     root /app/web;
     index index.html;
   }
