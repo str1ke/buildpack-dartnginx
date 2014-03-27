@@ -1,8 +1,48 @@
 #!/usr/bin/env bash
 set -e
 
+unset GIT_DIR
+
 apt-get update
 apt-get -y install nginx
+apt-get -y install unzip
+
+mkdir -p "$1" "$2"
+BUILD_DIR=$(cd "$1/" && pwd)
+CACHE_DIR=$(cd "$2/" && pwd)
+
+function message {
+  echo "-----> $1"
+  sync
+}
+
+if [ -z "$DART_SDK_URL" ]; then
+    message "ERROR: you must specify DART_SDK_URL to a Dart SDK for Linux. See README for this buildpack."
+    exit 1
+fi
+
+message "Downloading Dart VM from $DART_SDK_URL"
+cd $BUILD_DIR
+curl -L $DART_SDK_URL -o dart-sdk.zip
+unzip -o dart-sdk.zip && rm dart-sdk.zip
+cp -rf dart-sdk /app/
+
+# this variable is used by pub to determine the package install location
+PUB_CACHE="/app/pub-cache"
+export PUB_CACHE
+mkdir -p $PUB_CACHE
+
+message "Running pub get"
+cd /app
+/app/dart-sdk/bin/pub get
+
+cp -R $PUB_CACHE $BUILD_DIR/pub-cache
+cp -rL packages $BUILD_DIR/packages
+
+chown -R www-data:www-data $BUILD_DIR/pub-cache
+chown -R www-data:www-data $BUILD_DIR/packages
+chmod -R o+r $BUILD_DIR/packages
+chmod -R o+r $BUILD_DIR/pub-cache
 
 BINDIR=$(dirname "$0")
 
